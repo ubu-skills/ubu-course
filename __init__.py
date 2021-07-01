@@ -1,5 +1,6 @@
 import sys
 from mycroft import MycroftSkill, intent_handler # type: ignore
+from bs4 import BeautifulSoup
 sys.path.append("/usr/lib/UBUVoiceAssistant")
 from UBUVoiceAssistant.model.discussion import Discussion # type: ignore
 from UBUVoiceAssistant.model.forum import Forum # type: ignore
@@ -77,14 +78,17 @@ class UbuCourseSkill(MycroftSkill):
         if complete.lower() in ('si', 'sí', 'yes'):
             discussion = []
             for post in reversed(posts['posts']):
-                discussion.append(post['userfullname'] + ': ' + post['message'])
+                discussion.append(util.reorder_name(post['userfullname']) + ' dice: ' + self.clean_text(post['message']))
             self.speak(str(discussion).strip("[]'"))
         else:
             for post in reversed(posts['posts']):
                 resp = self.get_response(dialog='next.post')
                 if resp.lower() == 'no':
                     break
-                self.speak(post['userfullname'] + ': ' + post['message'])
+                self.speak(util.reorder_name(post['userfullname']) + ' dice: ' + self.clean_text(post['message']))
+
+    def clean_text(self, text):
+        return BeautifulSoup(text, "html.parser").get_text()
 
 
 def create_skill():
